@@ -28,9 +28,11 @@ cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DOPENSSL_SSL_LIBRARY:FILEPATH="${OPENSSL_DIR}/lib/libssl.a" \
   -DOPENSSL_CRYPTO_LIBRARY:FILEPATH="${OPENSSL_DIR}/lib/libcrypto.a" \
   -DBOOST_ROOT="${BOOST_DIR}" \
+  -DBoost_INCLUDE_DIR="${BOOST_DIR}/include" \
   -DBOOST_INCLUDEDIR="${BOOST_DIR}/include" \
   -DBOOST_LIBRARYDIR="${BOOST_DIR}/lib" \
   -DBoost_NO_SYSTEM_PATHS=ON \
+  -DBoost_NO_BOOST_CMAKE=ON \
   -DSodium_INCLUDE_DIR="${SODIUM_DIR}/include" \
   -DSodium_LIBRARY:FILEPATH="${SODIUM_DIR}/lib/libsodium.a" \
   -DUNBOUND_ROOT="${UNBOUND_DIR}" \
