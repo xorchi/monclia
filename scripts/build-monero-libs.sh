@@ -22,6 +22,10 @@ ls "${SODIUM_DIR}/lib/" || echo "MISSING"
 echo "=== libunbound ==="
 find "${UNBOUND_DIR}" -name "*.a" -o -name "*.h" | head -20 || echo "MISSING"
 
+echo "[boost] Installed structure:"
+find "${BOOST_DIR}/include" -name "uuid.hpp" -o -name "io_context.hpp" 2>/dev/null | head -10
+ls "${BOOST_DIR}/include/" 2>/dev/null
+
 echo "[monero] Configuring..."
 cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DCMAKE_TOOLCHAIN_FILE="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake" \
@@ -34,6 +38,12 @@ cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DBUILD_GUI_DEPS=ON \
   -DBUILD_TESTS=OFF \
   -DBUILD_DOCUMENTATION=OFF \
+  -DWITH_MINIUPNPC=OFF \
+  -DUSE_MINIUPNPC=OFF \
+  -DENABLE_READLINE=OFF \
+  -DUSE_READLINE=OFF \
+  -DSTACK_TRACE=OFF \
+  -DHIDAPI_FOUND=FALSE \
   -DUSE_DEVICE_TREZOR=OFF \
   -DOPENSSL_ROOT_DIR="${OPENSSL_DIR}" \
   -DOPENSSL_INCLUDE_DIR="${OPENSSL_DIR}/include" \
