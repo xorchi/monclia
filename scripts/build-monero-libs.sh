@@ -26,14 +26,15 @@ echo "[boost] Installed structure:"
 find "${BOOST_DIR}/include" -name "uuid.hpp" -o -name "io_context.hpp" 2>/dev/null | head -10
 ls "${BOOST_DIR}/include/" 2>/dev/null
 
+export CXXFLAGS="-I${BOOST_DIR}/include"
+export CFLAGS="-I${BOOST_DIR}/include"
+
 echo "[monero] Configuring..."
 cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DCMAKE_TOOLCHAIN_FILE="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake" \
   -DANDROID_ABI="armeabi-v7a" \
   -DANDROID_PLATFORM="android-${API_LEVEL}" \
   -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_CXX_FLAGS="-I${BOOST_DIR}/include" \
-  -DCMAKE_C_FLAGS="-I${BOOST_DIR}/include" \
   -DSTATIC=ON \
   -DBUILD_GUI_DEPS=ON \
   -DBUILD_TESTS=OFF \
@@ -45,6 +46,7 @@ cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DSTACK_TRACE=OFF \
   -DHIDAPI_FOUND=FALSE \
   -DUSE_DEVICE_TREZOR=OFF \
+  -DWITH_DEVICE_TREZOR=OFF \
   -DOPENSSL_ROOT_DIR="${OPENSSL_DIR}" \
   -DOPENSSL_INCLUDE_DIR="${OPENSSL_DIR}/include" \
   -DOPENSSL_SSL_LIBRARY="${OPENSSL_DIR}/lib/libssl.a" \
