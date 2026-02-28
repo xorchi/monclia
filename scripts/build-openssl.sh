@@ -14,7 +14,7 @@ export PATH="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin:${PAT
 mkdir -p "${BUILD_DIR}"
 
 echo "[openssl] Downloading..."
-curl -L "${OPENSSL_URL}" | tar xz -C /tmp
+curl -L --fail --retry 3 --retry-delay 5 "${OPENSSL_URL}" | tar xz -C /tmp
 
 echo "[openssl] Configuring..."
 cd "${SRC_DIR}"

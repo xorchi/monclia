@@ -18,7 +18,7 @@ export STRIP="${TOOLCHAIN}/bin/llvm-strip"
 mkdir -p "${BUILD_DIR}"
 
 echo "[libsodium] Downloading..."
-curl -L "${LIBSODIUM_URL}" | tar xz -C /tmp
+curl -L --fail --retry 3 --retry-delay 5 "${LIBSODIUM_URL}" | tar xz -C /tmp
 
 echo "[libsodium] Configuring..."
 cd "${SRC_DIR}"

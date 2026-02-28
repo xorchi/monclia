@@ -3,7 +3,7 @@ set -euo pipefail
 
 BOOST_VERSION="1.87.0"
 BOOST_VERSION_UNDERSCORE="${BOOST_VERSION//./_}"
-BOOST_URL="https://github.com/boostorg/boost/releases/download/boost-${BOOST_VERSION}/boost_${BOOST_VERSION_UNDERSCORE}.tar.gz"
+BOOST_URL="https://archives.boost.io/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_UNDERSCORE}.tar.gz"
 BUILD_DIR="$(pwd)/build/boost"
 SRC_DIR="/tmp/boost_${BOOST_VERSION_UNDERSCORE}"
 
@@ -18,7 +18,7 @@ RANLIB="${TOOLCHAIN}/bin/llvm-ranlib"
 mkdir -p "${BUILD_DIR}"
 
 echo "[boost] Downloading source tarball..."
-curl -L "${BOOST_URL}" | tar xz -C /tmp
+curl -L --fail --retry 3 --retry-delay 5 "${BOOST_URL}" | tar xz -C /tmp
 
 echo "[boost] Bootstrapping..."
 cd "${SRC_DIR}"

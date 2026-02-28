@@ -22,7 +22,7 @@ sudo apt-get install -y libexpat1-dev > /dev/null 2>&1
 mkdir -p "${BUILD_DIR}"
 
 echo "[libunbound] Downloading..."
-curl -L "${LIBUNBOUND_URL}" | tar xz -C /tmp
+curl -L --fail --retry 3 --retry-delay 5 "${LIBUNBOUND_URL}" | tar xz -C /tmp
 
 echo "[libunbound] Configuring..."
 cd "${SRC_DIR}"

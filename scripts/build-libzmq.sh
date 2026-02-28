@@ -12,7 +12,7 @@ API_LEVEL="${API_LEVEL:-24}"
 mkdir -p "${BUILD_DIR}"
 
 echo "[libzmq] Downloading..."
-curl -L "${LIBZMQ_URL}" | tar xz -C /tmp
+curl -L --fail --retry 3 --retry-delay 5 "${LIBZMQ_URL}" | tar xz -C /tmp
 
 echo "[libzmq] Configuring..."
 cmake -S "${SRC_DIR}" -B "${SRC_DIR}/build" \
