@@ -1,0 +1,30 @@
+# Build outputs
+build/
+app/build/
+.gradle/
+*.apk
+*.aab
+
+# Local Android SDK/NDK config
+local.properties
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# NDK build artifacts
+*.o
+*.a
+*.so
+obj/
+libs/
+
+# Dependencies build output
+external/build/
+scripts/output/
+
+# OS
+.DS_Store
+Thumbs.db
+1

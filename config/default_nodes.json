@@ -1,0 +1,39 @@
+{
+  "nodes": [
+    {
+      "operator": "selsta",
+      "address": "selsta1.featherwallet.net",
+      "port": 18081,
+      "protocol": "clearnet-over-tor",
+      "ssl": false
+    },
+    {
+      "operator": "sethforprivacy",
+      "address": "node.sethforprivacy.com",
+      "port": 18089,
+      "protocol": "clearnet-over-tor",
+      "ssl": true
+    },
+    {
+      "operator": "stormycloud",
+      "address": "xmr.stormycloud.org",
+      "port": 18089,
+      "protocol": "clearnet-over-tor",
+      "ssl": true
+    },
+    {
+      "operator": "trocador",
+      "address": "node.trocador.app",
+      "port": 18089,
+      "protocol": "clearnet-over-tor",
+      "ssl": true
+    },
+    {
+      "operator": "boldsuck",
+      "address": "6dsdenp55q7wqtbx7mqmrnf4jskoyahadpg6mxtqp26klsqhqqzsbad.onion",
+      "port": 18089,
+      "protocol": "onion",
+      "ssl": false
+    }
+  ]
+}
