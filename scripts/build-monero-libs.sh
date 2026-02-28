@@ -44,8 +44,8 @@ cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DBoost_INCLUDE_DIR="${BOOST_DIR}/include" \
   -DBoost_LIBRARY_DIR_RELEASE="${BOOST_DIR}/lib" \
   -DBoost_NO_BOOST_CMAKE=ON \
-  -DSodium_INCLUDE_DIR="${SODIUM_DIR}/include" \
-  -DSodium_LIBRARY="${SODIUM_DIR}/lib/libsodium.a" \
+  -DSODIUM_INCLUDE_DIR="${SODIUM_DIR}/include" \
+  -DSODIUM_LIBRARY="${SODIUM_DIR}/lib/libsodium.a" \
   -DZMQ_INCLUDE_PATH="${ZMQ_DIR}/include" \
   -DZMQ_LIB="${ZMQ_DIR}/lib/libzmq.a" \
   -DUNBOUND_ROOT="${UNBOUND_DIR}" \
