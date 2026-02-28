@@ -3,38 +3,54 @@ set -euo pipefail
 
 BOOST_VERSION="1.87.0"
 BOOST_VERSION_UNDERSCORE="${BOOST_VERSION//./_}"
-BOOST_URL="https://github.com/boostorg/boost/releases/download/boost-${BOOST_VERSION}/boost-${BOOST_VERSION}-cmake.tar.gz"
+BOOST_URL="https://github.com/boostorg/boost/releases/download/boost-${BOOST_VERSION}/boost_${BOOST_VERSION_UNDERSCORE}.tar.gz"
 BUILD_DIR="$(pwd)/build/boost"
-SRC_DIR="/tmp/boost-${BOOST_VERSION}"
+SRC_DIR="/tmp/boost_${BOOST_VERSION_UNDERSCORE}"
 
 TOOLCHAIN="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64"
 API_LEVEL="${API_LEVEL:-24}"
 
-export CC="${TOOLCHAIN}/bin/armv7a-linux-androideabi${API_LEVEL}-clang"
-export CXX="${TOOLCHAIN}/bin/armv7a-linux-androideabi${API_LEVEL}-clang++"
-export AR="${TOOLCHAIN}/bin/llvm-ar"
-export RANLIB="${TOOLCHAIN}/bin/llvm-ranlib"
+CC="${TOOLCHAIN}/bin/armv7a-linux-androideabi${API_LEVEL}-clang"
+CXX="${TOOLCHAIN}/bin/armv7a-linux-androideabi${API_LEVEL}-clang++"
+AR="${TOOLCHAIN}/bin/llvm-ar"
+RANLIB="${TOOLCHAIN}/bin/llvm-ranlib"
 
-mkdir -p "${BUILD_DIR}" /tmp
+mkdir -p "${BUILD_DIR}"
 
-echo "[boost] Downloading..."
+echo "[boost] Downloading source tarball..."
 curl -L "${BOOST_URL}" | tar xz -C /tmp
 
-echo "[boost] Configuring..."
+echo "[boost] Bootstrapping..."
 cd "${SRC_DIR}"
-cmake -S . -B build \
-  -DCMAKE_TOOLCHAIN_FILE="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake" \
-  -DANDROID_ABI="armeabi-v7a" \
-  -DANDROID_PLATFORM="android-${API_LEVEL}" \
-  -DCMAKE_INSTALL_PREFIX="${BUILD_DIR}" \
-  -DBUILD_SHARED_LIBS=OFF \
-  -DBOOST_ENABLE_CMAKE=ON \
-  -DBOOST_INCLUDE_LIBRARIES="atomic;chrono;date_time;filesystem;locale;program_options;regex;serialization;system;thread"
+./bootstrap.sh --prefix="${BUILD_DIR}" \
+  --with-libraries=atomic,chrono,date_time,filesystem,locale,program_options,regex,serialization,system,thread
+
+echo "[boost] Writing user-config.jam..."
+cat > user-config.jam << JAMEOF
+using clang : android :
+    ${CXX}
+    :
+    <archiver>${AR}
+    <ranlib>${RANLIB}
+    <compileflags>"-target armv7a-linux-androideabi${API_LEVEL} --sysroot=${TOOLCHAIN}/sysroot"
+    <linkflags>"-target armv7a-linux-androideabi${API_LEVEL}"
+    ;
+JAMEOF
 
 echo "[boost] Building..."
-cmake --build build -j"${JOBS:-4}"
-
-echo "[boost] Installing..."
-cmake --install build
+./b2 \
+  toolset=clang-android \
+  target-os=android \
+  architecture=arm \
+  address-model=32 \
+  variant=release \
+  link=static \
+  threading=multi \
+  runtime-link=static \
+  --user-config=user-config.jam \
+  --prefix="${BUILD_DIR}" \
+  --layout=system \
+  -j"${JOBS:-4}" \
+  install
 
 echo "[boost] Done. Output: ${BUILD_DIR}"
