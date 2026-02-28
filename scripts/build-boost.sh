@@ -29,7 +29,7 @@ cmake -S . -B build \
   -DCMAKE_INSTALL_PREFIX="${BUILD_DIR}" \
   -DBUILD_SHARED_LIBS=OFF \
   -DBOOST_ENABLE_CMAKE=ON \
-  -DBOOST_INCLUDE_LIBRARIES="atomic;chrono;date_time;filesystem;program_options;regex;serialization;system;thread"
+  -DBOOST_INCLUDE_LIBRARIES="atomic;chrono;date_time;filesystem;locale;program_options;regex;serialization;system;thread"
 
 echo "[boost] Building..."
 cmake --build build -j"${JOBS:-4}"
