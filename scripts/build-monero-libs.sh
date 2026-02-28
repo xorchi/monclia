@@ -28,6 +28,8 @@ cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DANDROID_ABI="armeabi-v7a" \
   -DANDROID_PLATFORM="android-${API_LEVEL}" \
   -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_CXX_FLAGS="-I${BOOST_DIR}/include" \
+  -DCMAKE_C_FLAGS="-I${BOOST_DIR}/include" \
   -DSTATIC=ON \
   -DBUILD_GUI_DEPS=ON \
   -DBUILD_TESTS=OFF \
