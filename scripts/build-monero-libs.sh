@@ -11,6 +11,16 @@ API_LEVEL="${API_LEVEL:-24}"
 
 mkdir -p "${BUILD_DIR}"
 
+echo "[monero] Checking dependency paths..."
+echo "=== OpenSSL ==="
+ls "${OPENSSL_DIR}/lib/" || echo "MISSING"
+echo "=== Boost ==="
+ls "${BOOST_DIR}/lib/" | head -5 || echo "MISSING"
+echo "=== libsodium ==="
+ls "${SODIUM_DIR}/lib/" || echo "MISSING"
+echo "=== libunbound ==="
+find "${UNBOUND_DIR}" -name "*.a" -o -name "*.h" | head -20 || echo "MISSING"
+
 echo "[monero] Configuring..."
 cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DCMAKE_TOOLCHAIN_FILE="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake" \
