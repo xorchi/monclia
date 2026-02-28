@@ -53,4 +53,6 @@ echo "[boost] Building..."
   -j"${JOBS:-4}" \
   install
 
+echo "[boost] Installed libs:"
+ls "${BUILD_DIR}/lib/" | grep -v cmake | head -20
 echo "[boost] Done. Output: ${BUILD_DIR}"
