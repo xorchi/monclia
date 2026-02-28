@@ -29,13 +29,20 @@ cd "${SRC_DIR}"
   --disable-shared \
   --enable-static \
   --with-ssl="${OPENSSL_DIR}" \
+  --with-pic \
   --disable-gost \
-  --with-pic
+  --disable-ecdsa \
+  --disable-dsa \
+  --without-libexpat \
+  --disable-unbound-event-api \
+  --disable-dnstap \
+  --disable-systemd \
+  --disable-flto
 
-echo "[libunbound] Building..."
-make -j"${JOBS:-4}"
+echo "[libunbound] Building library only..."
+make -j"${JOBS:-4}" lib
 
 echo "[libunbound] Installing..."
-make install
+make install-lib
 
 echo "[libunbound] Done. Output: ${BUILD_DIR}"
