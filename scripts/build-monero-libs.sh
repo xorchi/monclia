@@ -10,17 +10,7 @@ UNBOUND_DIR="$(pwd)/build/libunbound"
 API_LEVEL="${API_LEVEL:-24}"
 
 mkdir -p "${BUILD_DIR}"
-
-echo "[monero] Checking Boost structure..."
-find "${BOOST_DIR}" -maxdepth 4 -name "uuid" -o -name "asio" | head -10
-find "${BOOST_DIR}/include" -maxdepth 2 -type d | head -10 || echo "No include dir"
-
-# Boost cmake install kadang taruh headers di include/boost-1_87/boost/
-BOOST_INCLUDE="${BOOST_DIR}/include"
-if [ -d "${BOOST_DIR}/include/boost-1_87" ]; then
-  BOOST_INCLUDE="${BOOST_DIR}/include/boost-1_87"
-fi
-echo "Using BOOST_INCLUDE: ${BOOST_INCLUDE}"
+rm -rf "${BUILD_DIR}/CMakeCache.txt" "${BUILD_DIR}/CMakeFiles"
 
 echo "[monero] Configuring..."
 cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
@@ -35,18 +25,17 @@ cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DUSE_DEVICE_TREZOR=OFF \
   -DOPENSSL_ROOT_DIR="${OPENSSL_DIR}" \
   -DOPENSSL_INCLUDE_DIR="${OPENSSL_DIR}/include" \
-  -DOPENSSL_SSL_LIBRARY="${OPENSSL_DIR}/lib/libssl.a" \
-  -DOPENSSL_CRYPTO_LIBRARY="${OPENSSL_DIR}/lib/libcrypto.a" \
+  -DOPENSSL_SSL_LIBRARY:FILEPATH="${OPENSSL_DIR}/lib/libssl.a" \
+  -DOPENSSL_CRYPTO_LIBRARY:FILEPATH="${OPENSSL_DIR}/lib/libcrypto.a" \
   -DBOOST_ROOT="${BOOST_DIR}" \
-  -DBOOST_INCLUDEDIR="${BOOST_INCLUDE}" \
+  -DBOOST_INCLUDEDIR="${BOOST_DIR}/include" \
   -DBOOST_LIBRARYDIR="${BOOST_DIR}/lib" \
   -DBoost_NO_SYSTEM_PATHS=ON \
-  -DCMAKE_CXX_FLAGS="-I${BOOST_INCLUDE}" \
-  -DCMAKE_C_FLAGS="-I${BOOST_INCLUDE}" \
   -DSodium_INCLUDE_DIR="${SODIUM_DIR}/include" \
-  -DSodium_LIBRARY="${SODIUM_DIR}/lib/libsodium.a" \
+  -DSodium_LIBRARY:FILEPATH="${SODIUM_DIR}/lib/libsodium.a" \
+  -DUNBOUND_ROOT="${UNBOUND_DIR}" \
   -DUNBOUND_INCLUDE_DIR="${UNBOUND_DIR}/include" \
-  -DUNBOUND_LIBRARY="${UNBOUND_DIR}/lib/libunbound.a"
+  -DUNBOUND_LIBRARIES:FILEPATH="${UNBOUND_DIR}/lib/libunbound.a"
 
 echo "[monero] Building wallet libraries..."
 cmake --build "${BUILD_DIR}" \
