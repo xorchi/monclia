@@ -55,6 +55,10 @@ echo "[boost] Building..."
   --with-date_time \
   --with-filesystem \
   --with-locale \
+  boost.locale.iconv=off \
+  boost.locale.icu=off \
+  boost.locale.std=on \
+  boost.locale.posix=off \
   --with-program_options \
   --with-regex \
   --with-serialization \
