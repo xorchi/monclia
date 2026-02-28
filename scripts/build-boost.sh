@@ -50,6 +50,16 @@ echo "[boost] Building..."
   --user-config=user-config.jam \
   --prefix="${BUILD_DIR}" \
   --layout=system \
+  --with-atomic \
+  --with-chrono \
+  --with-date_time \
+  --with-filesystem \
+  --with-locale \
+  --with-program_options \
+  --with-regex \
+  --with-serialization \
+  --with-system \
+  --with-thread \
   -j"${JOBS:-4}" \
   install
 
