@@ -42,8 +42,9 @@ cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DBoost_NO_SYSTEM_PATHS=ON \
   -DSodium_INCLUDE_DIR="${SODIUM_DIR}/include" \
   -DSodium_LIBRARY="${SODIUM_DIR}/lib/libsodium.a" \
+  -DUNBOUND_ROOT="${UNBOUND_DIR}" \
   -DUNBOUND_INCLUDE_DIR="${UNBOUND_DIR}/include" \
-  -DUNBOUND_LIBRARY="${UNBOUND_DIR}/lib/libunbound.a"
+  -DUNBOUND_LIBRARIES="${UNBOUND_DIR}/lib/libunbound.a"
 
 echo "[monero] Building wallet libraries..."
 cmake --build "${BUILD_DIR}" \
