@@ -33,11 +33,9 @@ cd "${SRC_DIR}"
   --disable-gost \
   --disable-ecdsa \
   --disable-dsa \
-  --without-libexpat \
-  --disable-unbound-event-api \
+  --with-libexpat=no \
   --disable-dnstap \
-  --disable-systemd \
-  --disable-flto
+  --disable-systemd
 
 echo "[libunbound] Building library only..."
 make -j"${JOBS:-4}" lib
