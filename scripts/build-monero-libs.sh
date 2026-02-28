@@ -23,9 +23,17 @@ cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DBUILD_DOCUMENTATION=OFF \
   -DUSE_DEVICE_TREZOR=OFF \
   -DOPENSSL_ROOT_DIR="${OPENSSL_DIR}" \
+  -DOPENSSL_INCLUDE_DIR="${OPENSSL_DIR}/include" \
+  -DOPENSSL_SSL_LIBRARY="${OPENSSL_DIR}/lib/libssl.a" \
+  -DOPENSSL_CRYPTO_LIBRARY="${OPENSSL_DIR}/lib/libcrypto.a" \
   -DBOOST_ROOT="${BOOST_DIR}" \
-  -DSodium_ROOT="${SODIUM_DIR}" \
-  -DUNBOUND_ROOT="${UNBOUND_DIR}"
+  -DBOOST_INCLUDEDIR="${BOOST_DIR}/include" \
+  -DBOOST_LIBRARYDIR="${BOOST_DIR}/lib" \
+  -DBoost_NO_SYSTEM_PATHS=ON \
+  -DSodium_INCLUDE_DIR="${SODIUM_DIR}/include" \
+  -DSodium_LIBRARY="${SODIUM_DIR}/lib/libsodium.a" \
+  -DUNBOUND_INCLUDE_DIR="${UNBOUND_DIR}/include" \
+  -DUNBOUND_LIBRARY="${UNBOUND_DIR}/lib/libunbound.a"
 
 echo "[monero] Building wallet libraries..."
 cmake --build "${BUILD_DIR}" \
