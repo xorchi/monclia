@@ -7,6 +7,7 @@ OPENSSL_DIR="$(pwd)/build/openssl"
 BOOST_DIR="$(pwd)/build/boost"
 SODIUM_DIR="$(pwd)/build/libsodium"
 UNBOUND_DIR="$(pwd)/build/libunbound"
+ZMQ_DIR="$(pwd)/build/libzmq"
 API_LEVEL="${API_LEVEL:-24}"
 
 mkdir -p "${BUILD_DIR}"
@@ -32,8 +33,6 @@ cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DBUILD_TESTS=OFF \
   -DBUILD_DOCUMENTATION=OFF \
   -DUSE_DEVICE_TREZOR=OFF \
-  -DZMQ_FOUND=OFF \
-  -DWITH_ZMQ=OFF \
   -DOPENSSL_ROOT_DIR="${OPENSSL_DIR}" \
   -DOPENSSL_INCLUDE_DIR="${OPENSSL_DIR}/include" \
   -DOPENSSL_SSL_LIBRARY="${OPENSSL_DIR}/lib/libssl.a" \
@@ -47,6 +46,8 @@ cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DBoost_NO_BOOST_CMAKE=ON \
   -DSodium_INCLUDE_DIR="${SODIUM_DIR}/include" \
   -DSodium_LIBRARY="${SODIUM_DIR}/lib/libsodium.a" \
+  -DZMQ_INCLUDE_PATH="${ZMQ_DIR}/include" \
+  -DZMQ_LIB="${ZMQ_DIR}/lib/libzmq.a" \
   -DUNBOUND_ROOT="${UNBOUND_DIR}" \
   -DUNBOUND_INCLUDE_DIR="${UNBOUND_DIR}/include" \
   -DUNBOUND_LIBRARIES="${UNBOUND_DIR}/lib/libunbound.a"

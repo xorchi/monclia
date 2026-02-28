@@ -73,6 +73,13 @@ jobs:
           path: build/libunbound
           key: libunbound-${{ env.ABI }}-api${{ env.API_LEVEL }}-v1.22.0
 
+      - name: Cache libzmq
+        id: cache-libzmq
+        uses: actions/cache@v4
+        with:
+          path: build/libzmq
+          key: libzmq-${{ env.ABI }}-api${{ env.API_LEVEL }}-v4.3.5
+
       - name: Cache monero libs
         id: cache-monero
         uses: actions/cache@v4
@@ -96,6 +103,10 @@ jobs:
         if: steps.cache-libunbound.outputs.cache-hit != 'true'
         run: bash scripts/build-libunbound.sh
 
+
+      - name: Build libzmq
+        if: steps.cache-libzmq.outputs.cache-hit != 'true'
+        run: bash scripts/build-libzmq.sh
       - name: Build Monero libraries
         if: steps.cache-monero.outputs.cache-hit != 'true'
         run: bash scripts/build-monero-libs.sh
