@@ -16,6 +16,9 @@ export AR="${TOOLCHAIN}/bin/llvm-ar"
 export RANLIB="${TOOLCHAIN}/bin/llvm-ranlib"
 export STRIP="${TOOLCHAIN}/bin/llvm-strip"
 
+# Install expat hanya untuk satisfy configure check di host
+sudo apt-get install -y libexpat1-dev > /dev/null 2>&1
+
 mkdir -p "${BUILD_DIR}"
 
 echo "[libunbound] Downloading..."
@@ -33,7 +36,6 @@ cd "${SRC_DIR}"
   --disable-gost \
   --disable-ecdsa \
   --disable-dsa \
-  --with-libexpat=no \
   --disable-dnstap \
   --disable-systemd
 
