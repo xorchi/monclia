@@ -1,0 +1,9 @@
+[submodule "external/monero"]
+	path = external/monero
+	url = https://github.com/monero-project/monero
+[submodule "external/tor-android"]
+	path = external/tor-android
+	url = https://github.com/guardianproject/tor-android
+[submodule "external/termux-app"]
+	path = external/termux-app
+	url = https://github.com/termux/termux-app
