@@ -40,6 +40,9 @@ cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DBOOST_INCLUDEDIR="${BOOST_DIR}/include" \
   -DBOOST_LIBRARYDIR="${BOOST_DIR}/lib" \
   -DBoost_NO_SYSTEM_PATHS=ON \
+  -DBoost_INCLUDE_DIR="${BOOST_DIR}/include" \
+  -DBoost_LIBRARY_DIR_RELEASE="${BOOST_DIR}/lib" \
+  -DBoost_NO_BOOST_CMAKE=ON \
   -DSodium_INCLUDE_DIR="${SODIUM_DIR}/include" \
   -DSodium_LIBRARY="${SODIUM_DIR}/lib/libsodium.a" \
   -DUNBOUND_ROOT="${UNBOUND_DIR}" \
