@@ -33,7 +33,7 @@ class WalletService : Service() {
         return Notification.Builder(this, channelId)
             .setContentTitle("Monclia")
             .setContentText("Wallet running")
-            .setSmallIcon(android.R.drawable.ic_lock_lock)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setOngoing(true)
             .build()
     }
