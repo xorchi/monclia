@@ -35,10 +35,15 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
             } catch (e: Exception) {
                 File(filesDir, "crash.log").writeText(e.stackTraceToString())
                 writeLogToDownloads("monclia-crash.log", e.stackTraceToString())
+                val msg = e.stackTraceToString()
                 AlertDialog.Builder(this@TerminalActivity)
                     .setTitle("Startup Error")
-                    .setMessage(e.stackTraceToString().take(2000))
+                    .setMessage(msg.take(2000))
                     .setPositiveButton("OK", null)
+                    .setNeutralButton("Copy") { _, _ ->
+                        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("crash", msg))
+                    }
                     .show()
             }
         }
@@ -83,10 +88,15 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
                 writeLogToDownloads("monclia-crash.log", throwable.stackTraceToString())
             }
             runOnUiThread {
+                val msg = throwable.stackTraceToString()
                 AlertDialog.Builder(this)
                     .setTitle("Crash")
-                    .setMessage(throwable.stackTraceToString().take(2000))
+                    .setMessage(msg.take(2000))
                     .setPositiveButton("OK", null)
+                    .setNeutralButton("Copy") { _, _ ->
+                        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("crash", msg))
+                    }
                     .show()
             }
         }
@@ -113,7 +123,8 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
             this
         )
         terminalSession = session
-        terminalView.attachSession(session)
+        terminalView.setTextSize(24)
+        terminalView.post { terminalView.attachSession(session) }
     }
 
     private fun prepareStubScript(): String {
