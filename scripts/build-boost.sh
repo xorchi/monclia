@@ -50,7 +50,7 @@ echo "[boost] Building..."
   runtime-link=static \
   --user-config=user-config.jam \
   --prefix="${BUILD_DIR}" \
-  --layout=system \
+  --layout=tagged \
   --with-headers \
   --with-atomic \
   --with-chrono \

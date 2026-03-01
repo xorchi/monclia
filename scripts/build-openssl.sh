@@ -7,7 +7,7 @@ BUILD_DIR="$(pwd)/build/openssl"
 SRC_DIR="/tmp/openssl-${OPENSSL_VERSION}"
 API_LEVEL="${API_LEVEL:-24}"
 
-# OpenSSL modern menggunakan ANDROID_NDK_ROOT, bukan toolchain manual
+# OpenSSL requires ANDROID_NDK_ROOT and NDK bin in PATH
 export ANDROID_NDK_ROOT="${ANDROID_NDK_HOME}"
 export PATH="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin:${PATH}"
 
