@@ -1,13 +1,19 @@
 package io.monclia
 
 import android.content.ComponentName
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.IBinder
+import android.provider.MediaStore
+import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.termux.terminal.TerminalSession
 import com.termux.terminal.TerminalSessionClient
@@ -28,7 +34,8 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
                 startWalletCli()
             } catch (e: Exception) {
                 File(filesDir, "crash.log").writeText(e.stackTraceToString())
-                android.app.AlertDialog.Builder(this@TerminalActivity)
+                writeLogToDownloads("monclia-crash.log", e.stackTraceToString())
+                AlertDialog.Builder(this@TerminalActivity)
                     .setTitle("Startup Error")
                     .setMessage(e.stackTraceToString().take(2000))
                     .setPositiveButton("OK", null)
@@ -70,12 +77,13 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         super.onCreate(savedInstanceState)
 
         Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
-            android.util.Log.e("Monclia", throwable.stackTraceToString())
+            Log.e("Monclia", throwable.stackTraceToString())
             runCatching {
                 File(filesDir, "crash.log").writeText(throwable.stackTraceToString())
+                writeLogToDownloads("monclia-crash.log", throwable.stackTraceToString())
             }
             runOnUiThread {
-                android.app.AlertDialog.Builder(this)
+                AlertDialog.Builder(this)
                     .setTitle("Crash")
                     .setMessage(throwable.stackTraceToString().take(2000))
                     .setPositiveButton("OK", null)
@@ -118,6 +126,36 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
             stub.setExecutable(true)
         }
         return stub.absolutePath
+    }
+
+    private fun writeLogToDownloads(filename: String, content: String) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val values = ContentValues().apply {
+                    put(MediaStore.Downloads.DISPLAY_NAME, filename)
+                    put(MediaStore.Downloads.MIME_TYPE, "text/plain")
+                    put(MediaStore.Downloads.IS_PENDING, 1)
+                }
+                val uri = contentResolver.insert(
+                    MediaStore.Downloads.EXTERNAL_CONTENT_URI, values
+                )
+                uri?.let {
+                    contentResolver.openOutputStream(it)?.use { os ->
+                        os.write(content.toByteArray())
+                    }
+                    values.clear()
+                    values.put(MediaStore.Downloads.IS_PENDING, 0)
+                    contentResolver.update(it, values, null, null)
+                }
+            } else {
+                val dir = Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS
+                )
+                File(dir, filename).writeText(content)
+            }
+        } catch (e: Exception) {
+            Log.e("Monclia", "Failed to write log: ${e.message}")
+        }
     }
 
     override fun onDestroy() {
