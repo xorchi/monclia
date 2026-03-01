@@ -5,6 +5,7 @@ BOOST_VERSION="1.87.0"
 BOOST_VERSION_UNDERSCORE="${BOOST_VERSION//./_}"
 BOOST_URL="https://archives.boost.io/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_UNDERSCORE}.tar.gz"
 BUILD_DIR="$(pwd)/build/boost"
+ICONV_DIR="$(pwd)/build/libiconv"
 SRC_DIR="/tmp/boost_${BOOST_VERSION_UNDERSCORE}"
 
 TOOLCHAIN="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64"
@@ -55,10 +56,11 @@ echo "[boost] Building..."
   --with-date_time \
   --with-filesystem \
   --with-locale \
-  boost.locale.iconv=off \
+  boost.locale.iconv=on \
   boost.locale.icu=off \
-  boost.locale.std=on \
+  boost.locale.std=off \
   boost.locale.posix=off \
+  -sICONV_PATH="${ICONV_DIR}" \
   --with-program_options \
   --with-regex \
   --with-serialization \

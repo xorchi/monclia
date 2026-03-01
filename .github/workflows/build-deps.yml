@@ -73,6 +73,13 @@ jobs:
           path: build/libunbound
           key: libunbound-${{ env.ABI }}-api${{ env.API_LEVEL }}-v1.22.0
 
+
+      - name: Cache libiconv
+        id: cache-libiconv
+        uses: actions/cache@v4
+        with:
+          path: build/libiconv
+          key: libiconv-${{ env.ABI }}-api${{ env.API_LEVEL }}-v1.17
       - name: Cache libzmq
         id: cache-libzmq
         uses: actions/cache@v4
@@ -91,6 +98,10 @@ jobs:
         if: steps.cache-openssl.outputs.cache-hit != 'true'
         run: bash scripts/build-openssl.sh
 
+
+      - name: Build libiconv
+        if: steps.cache-libiconv.outputs.cache-hit != 'true'
+        run: bash scripts/build-libiconv.sh
       - name: Build Boost
         if: steps.cache-boost.outputs.cache-hit != 'true'
         run: bash scripts/build-boost.sh
