@@ -1,16 +1,7 @@
 package io.monclia
 
-import android.content.ComponentName
-import android.content.ContentValues
 import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
-import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.os.IBinder
-import android.provider.MediaStore
-import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
 import androidx.appcompat.app.AlertDialog
@@ -25,33 +16,6 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
 
     private lateinit var terminalView: TerminalView
     private var terminalSession: TerminalSession? = null
-    private var walletService: WalletService? = null
-    private var walletCliHandler: WalletCliHandler? = null
-
-    private val serviceConnection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName, binder: IBinder) {
-            walletService = (binder as WalletService.LocalBinder).getService()
-            try {
-                startWalletCli()
-            } catch (e: Exception) {
-                File(filesDir, "crash.log").writeText(e.stackTraceToString())
-                writeLogToDownloads("monclia-crash.log", e.stackTraceToString())
-                val msg = e.stackTraceToString()
-                AlertDialog.Builder(this@TerminalActivity)
-                    .setTitle("Startup Error")
-                    .setMessage(msg.take(2000))
-                    .setPositiveButton("OK", null)
-                    .setNeutralButton("Copy") { _, _ ->
-                        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("crash", msg))
-                    }
-                    .show()
-            }
-        }
-        override fun onServiceDisconnected(name: ComponentName) {
-            walletService = null
-        }
-    }
 
     private val viewClient = object : TerminalViewClient {
         override fun onScale(scale: Float): Float = scale
@@ -68,11 +32,7 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         override fun readAltKey(): Boolean = false
         override fun readShiftKey(): Boolean = false
         override fun readFnKey(): Boolean = false
-        override fun onCodePoint(codePoint: Int, ctrlDown: Boolean, session: TerminalSession): Boolean {
-            val char = String(Character.toChars(codePoint))
-            walletCliHandler?.onInput(char)
-            return false
-        }
+        override fun onCodePoint(codePoint: Int, ctrlDown: Boolean, session: TerminalSession): Boolean = false
         override fun onEmulatorSet() {}
         override fun logError(tag: String, message: String) {}
         override fun logWarn(tag: String, message: String) {}
@@ -91,9 +51,7 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
 
         Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
             Logger.error("Crash", "Uncaught exception", throwable)
-            runCatching {
-                File(filesDir, "crash.log").writeText(throwable.stackTraceToString())
-            }
+            runCatching { File(filesDir, "crash.log").writeText(throwable.stackTraceToString()) }
             runOnUiThread {
                 val msg = throwable.stackTraceToString()
                 AlertDialog.Builder(this)
@@ -101,8 +59,8 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
                     .setMessage(msg.take(2000))
                     .setPositiveButton("OK", null)
                     .setNeutralButton("Copy") { _, _ ->
-                        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("crash", msg))
+                        val cb = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        cb.setPrimaryClip(android.content.ClipData.newPlainText("crash", msg))
                     }
                     .show()
             }
@@ -119,63 +77,42 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
             imm.showSoftInput(terminalView, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
         }
 
-        val intent = Intent(this, WalletService::class.java)
-        startForegroundService(intent)
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        startWalletCli()
     }
 
     private fun startWalletCli() {
+        val orchestrator = prepareOrchestrator()
+        val walletDir = File(filesDir, "wallets").also { it.mkdirs() }
+
         val session = TerminalSession(
             "/system/bin/sh",
             filesDir.absolutePath,
-            arrayOf<String>(),
-            arrayOf("TERM=xterm-256color", "HOME=${filesDir.absolutePath}"),
+            arrayOf(orchestrator),
+            arrayOf(
+                "TERM=xterm-256color",
+                "HOME=${filesDir.absolutePath}",
+                "WALLET_DIR=${walletDir.absolutePath}",
+                "BIN_DIR=${File(filesDir, "bin").absolutePath}",
+                "LOG_DIR=${File(filesDir, "logs").absolutePath}",
+            ),
             2000,
             this
         )
         terminalSession = session
         terminalView.setTextSize(24)
-        terminalView.post {
-            terminalView.attachSession(session)
-            val handler = WalletCliHandler(this, session) { terminalView.onScreenUpdated() }
-            walletCliHandler = handler
-            handler.start()
-        }
+        terminalView.post { terminalView.attachSession(session) }
     }
 
-    private fun writeLogToDownloads(filename: String, content: String) {
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val values = ContentValues().apply {
-                    put(MediaStore.Downloads.DISPLAY_NAME, filename)
-                    put(MediaStore.Downloads.MIME_TYPE, "text/plain")
-                    put(MediaStore.Downloads.IS_PENDING, 1)
-                }
-                val uri = contentResolver.insert(
-                    MediaStore.Downloads.EXTERNAL_CONTENT_URI, values
-                )
-                uri?.let {
-                    contentResolver.openOutputStream(it)?.use { os ->
-                        os.write(content.toByteArray())
-                    }
-                    values.clear()
-                    values.put(MediaStore.Downloads.IS_PENDING, 0)
-                    contentResolver.update(it, values, null, null)
-                }
-            } else {
-                val dir = Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_DOWNLOADS
-                )
-                File(dir, filename).writeText(content)
-            }
-        } catch (e: Exception) {
-            Log.e("Monclia", "Failed to write log: ${e.message}")
-        }
+    private fun prepareOrchestrator(): String {
+        val binDir = File(filesDir, "bin").also { it.mkdirs() }
+        val script = File(binDir, "orchestrator.sh")
+        assets.open("orchestrator.sh").use { it.copyTo(script.outputStream()) }
+        script.setExecutable(true)
+        return script.absolutePath
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        unbindService(serviceConnection)
         terminalSession?.finishIfRunning()
     }
 
@@ -185,14 +122,17 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         terminalView.onScreenUpdated()
     }
     override fun onTitleChanged(updatedSession: TerminalSession) {}
-    override fun onSessionFinished(finishedSession: TerminalSession) {}
+    override fun onSessionFinished(finishedSession: TerminalSession) {
+        Logger.log("App", "Session finished — closing app")
+        finish()
+    }
     override fun onCopyTextToClipboard(session: TerminalSession, text: String) {
-        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("monclia", text))
+        val cb = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        cb.setPrimaryClip(android.content.ClipData.newPlainText("monclia", text))
     }
     override fun onPasteTextFromClipboard(session: TerminalSession?) {
-        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-        val text = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: return
+        val cb = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        val text = cb.primaryClip?.getItemAt(0)?.text?.toString() ?: return
         session?.write(text)
     }
     override fun onBell(session: TerminalSession) {}
