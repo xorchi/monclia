@@ -11,6 +11,9 @@ import com.termux.terminal.TerminalSessionClient
 import com.termux.view.TerminalView
 import com.termux.view.TerminalViewClient
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
+import java.security.MessageDigest
 
 class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
 
@@ -72,6 +75,7 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         terminalView.isFocusable = true
         terminalView.isFocusableInTouchMode = true
         terminalView.requestFocus()
+        terminalView.setTextSize(24)
         terminalView.post {
             val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
             imm.showSoftInput(terminalView, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
@@ -82,12 +86,21 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
 
     private fun startWalletCli() {
         val walletDir = File(filesDir, "wallets").also { it.mkdirs() }
-        val binDir = File(filesDir, "bin").also { it.mkdirs() }
-        val logDir = File(filesDir, "logs").also { it.mkdirs() }
+        val binDir   = File(filesDir, "bin").also { it.mkdirs() }
+        val logDir   = File(filesDir, "logs").also { it.mkdirs() }
+        val walletCli = File(binDir, "monero-wallet-cli")
 
-        val scriptContent = assets.open("orchestrator.sh")
-            .bufferedReader().readText()
+        if (walletCli.exists()) {
+            spawnSession(walletDir, binDir, logDir)
+        } else {
+            downloadWalletCli(walletCli, binDir) {
+                runOnUiThread { spawnSession(walletDir, binDir, logDir) }
+            }
+        }
+    }
 
+    private fun spawnSession(walletDir: File, binDir: File, logDir: File) {
+        val scriptContent = assets.open("orchestrator.sh").bufferedReader().readText()
         val session = TerminalSession(
             "/system/bin/sh",
             filesDir.absolutePath,
@@ -103,8 +116,82 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
             this
         )
         terminalSession = session
-        terminalView.setTextSize(24)
         terminalView.post { terminalView.attachSession(session) }
+    }
+
+    private fun downloadWalletCli(dest: File, binDir: File, onComplete: () -> Unit) {
+        val url = "https://downloads.getmonero.org/cli/monero-android-armv7-v0.18.4.5.tar.bz2"
+        val expectedSha256 = "3cd6611c5c33ae4c10e52698826560bbb17e00cf2f8a2d7f61e79d28f0f36ef6"
+        val archive = File(binDir, "monero-android-armv7.tar.bz2")
+
+        // Show download progress session
+        val progressSession = TerminalSession(
+            "/system/bin/sh",
+            filesDir.absolutePath,
+            arrayOf("-c", "echo Downloading monero-wallet-cli..."),
+            arrayOf("TERM=xterm-256color"),
+            200,
+            this
+        )
+        terminalSession = progressSession
+        terminalView.post { terminalView.attachSession(progressSession) }
+
+        Thread {
+            try {
+                Logger.log("App", "Downloading monero-wallet-cli")
+                val conn = URL(url).openConnection() as HttpURLConnection
+                conn.connect()
+                val total = conn.contentLengthLong
+                var downloaded = 0L
+
+                archive.outputStream().use { out ->
+                    conn.inputStream.use { input ->
+                        val buf = ByteArray(32768)
+                        var n: Int
+                        while (input.read(buf).also { n = it } != -1) {
+                            out.write(buf, 0, n)
+                            downloaded += n
+                            if (total > 0) {
+                                val pct = downloaded * 100 / total
+                                Logger.log("App", "Download $pct%")
+                            }
+                        }
+                    }
+                }
+
+                Logger.log("App", "Verifying SHA256")
+                val md = MessageDigest.getInstance("SHA-256")
+                archive.inputStream().use { md.update(it.readBytes()) }
+                val actualSha256 = md.digest().joinToString("") { "%02x".format(it) }
+
+                if (actualSha256 != expectedSha256) {
+                    Logger.error("App", "SHA256 mismatch: $actualSha256")
+                    archive.delete()
+                    return@Thread
+                }
+
+                Logger.log("App", "Extracting archive")
+                val proc = ProcessBuilder(
+                    "tar", "-xjf", archive.absolutePath,
+                    "--wildcards", "*/monero-wallet-cli",
+                    "--strip-components=1",
+                    "-C", binDir.absolutePath
+                ).redirectErrorStream(true).start()
+                proc.waitFor()
+                archive.delete()
+
+                if (dest.exists()) {
+                    dest.setExecutable(true)
+                    Logger.log("App", "monero-wallet-cli ready")
+                    onComplete()
+                } else {
+                    Logger.error("App", "Binary not found after extraction")
+                }
+
+            } catch (e: Throwable) {
+                Logger.error("App", "Download failed", e)
+            }
+        }.start()
     }
 
     override fun onDestroy() {
