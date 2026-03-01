@@ -33,7 +33,7 @@ using clang : android :
     :
     <archiver>${AR}
     <ranlib>${RANLIB}
-    <compileflags>"-target armv7a-linux-androideabi${API_LEVEL} --sysroot=${TOOLCHAIN}/sysroot"
+    <compileflags>"-target armv7a-linux-androideabi${API_LEVEL} --sysroot=${TOOLCHAIN}/sysroot -fPIC"
     <linkflags>"-target armv7a-linux-androideabi${API_LEVEL}"
     ;
 JAMEOF

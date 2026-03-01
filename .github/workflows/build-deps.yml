@@ -57,7 +57,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: build/boost
-          key: boost-${{ env.ABI }}-api${{ env.API_LEVEL }}-v1.87.0
+          key: boost-${{ env.ABI }}-api${{ env.API_LEVEL }}-v1.87.0-fPIC
 
       - name: Cache libsodium
         id: cache-libsodium
@@ -92,7 +92,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: build/monero
-          key: monero-${{ env.ABI }}-api${{ env.API_LEVEL }}-v0.18.4.5-${{ hashFiles('external/monero') }}
+          key: monero-${{ env.ABI }}-api${{ env.API_LEVEL }}-v0.18.4.5-fPIC-${{ hashFiles('external/monero') }}-${{ hashFiles('scripts/build-monero-libs.sh') }}
 
       - name: Build OpenSSL
         if: steps.cache-openssl.outputs.cache-hit != 'true'
