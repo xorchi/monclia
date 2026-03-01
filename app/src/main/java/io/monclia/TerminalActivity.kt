@@ -106,7 +106,11 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
     private fun prepareOrchestrator(): String {
         val binDir = File(filesDir, "bin").also { it.mkdirs() }
         val script = File(binDir, "orchestrator.sh")
-        assets.open("orchestrator.sh").use { it.copyTo(script.outputStream()) }
+        val tmp = File(binDir, "orchestrator.sh.tmp")
+        assets.open("orchestrator.sh").use { input ->
+            tmp.outputStream().use { output -> input.copyTo(output) }
+        }
+        tmp.renameTo(script)
         script.setExecutable(true)
         return script.absolutePath
     }
