@@ -81,19 +81,23 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
     }
 
     private fun startWalletCli() {
-        val orchestrator = prepareOrchestrator()
         val walletDir = File(filesDir, "wallets").also { it.mkdirs() }
+        val binDir = File(filesDir, "bin").also { it.mkdirs() }
+        val logDir = File(filesDir, "logs").also { it.mkdirs() }
+
+        val scriptContent = assets.open("orchestrator.sh")
+            .bufferedReader().readText()
 
         val session = TerminalSession(
-            orchestrator,
+            "/system/bin/sh",
             filesDir.absolutePath,
-            arrayOf(),
+            arrayOf("-c", scriptContent),
             arrayOf(
                 "TERM=xterm-256color",
                 "HOME=${filesDir.absolutePath}",
                 "WALLET_DIR=${walletDir.absolutePath}",
-                "BIN_DIR=${File(filesDir, "bin").absolutePath}",
-                "LOG_DIR=${File(filesDir, "logs").absolutePath}",
+                "BIN_DIR=${binDir.absolutePath}",
+                "LOG_DIR=${logDir.absolutePath}",
             ),
             2000,
             this
@@ -101,18 +105,6 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         terminalSession = session
         terminalView.setTextSize(24)
         terminalView.post { terminalView.attachSession(session) }
-    }
-
-    private fun prepareOrchestrator(): String {
-        val binDir = File(filesDir, "bin").also { it.mkdirs() }
-        val script = File(binDir, "orchestrator.sh")
-        val tmp = File(binDir, "orchestrator.sh.tmp")
-        assets.open("orchestrator.sh").use { input ->
-            tmp.outputStream().use { output -> input.copyTo(output) }
-        }
-        tmp.renameTo(script)
-        script.setExecutable(true)
-        return script.absolutePath
     }
 
     override fun onDestroy() {
