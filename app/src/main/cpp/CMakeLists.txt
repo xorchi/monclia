@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(monclia)
 
-set(NATIVE_LIBS_DIR ${CMAKE_SOURCE_DIR}/../../../../../build)
+set(NATIVE_LIBS_DIR ${CMAKE_SOURCE_DIR}/../../../../build)
 set(MONERO_DIR ${NATIVE_LIBS_DIR}/monero)
 set(BOOST_DIR ${NATIVE_LIBS_DIR}/boost)
 set(OPENSSL_DIR ${NATIVE_LIBS_DIR}/openssl)
