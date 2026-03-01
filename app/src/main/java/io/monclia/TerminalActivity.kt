@@ -48,9 +48,20 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         override fun logStackTrace(tag: String, e: Exception) {}
     }
 
+    private fun writeCrashToDownloads(msg: String) {
+        try {
+            val dl = android.os.Environment.getExternalStoragePublicDirectory(
+                android.os.Environment.DIRECTORY_DOWNLOADS)
+            java.io.File(dl, "monclia-crash.txt").writeText(msg)
+        } catch (_: Throwable) {}
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        try { onCreateSafe() } catch (e: Throwable) { writeCrashToDownloads(e.stackTraceToString()); throw e }
+    }
 
+    private fun onCreateSafe() {
         Logger.init(this)
         Logger.log("App", "Monclia started")
 
