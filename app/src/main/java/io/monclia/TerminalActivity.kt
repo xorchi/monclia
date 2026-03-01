@@ -81,11 +81,13 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        Logger.init(this)
+        Logger.log("App", "Monclia started")
+
         Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
-            Log.e("Monclia", throwable.stackTraceToString())
+            Logger.error("Crash", "Uncaught exception", throwable)
             runCatching {
                 File(filesDir, "crash.log").writeText(throwable.stackTraceToString())
-                writeLogToDownloads("monclia-crash.log", throwable.stackTraceToString())
             }
             runOnUiThread {
                 val msg = throwable.stackTraceToString()
@@ -119,6 +121,25 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
 
     private fun startWalletCli() {
         val walletDir = File(filesDir, "wallets").also { it.mkdirs() }
+
+        // Test: verifikasi libmonclia.so bisa di-load
+        try {
+            val testPath = File(walletDir, "test-wallet").absolutePath
+            val exists = WalletJni.walletExists(testPath)
+            Logger.log("JNI", "WalletJni loaded OK, walletExists=$exists")
+        } catch (e: Throwable) {
+            Logger.error("JNI", "WalletJni load FAILED", e)
+            AlertDialog.Builder(this)
+                .setTitle("JNI Load Error")
+                .setMessage(e.stackTraceToString().take(2000))
+                .setPositiveButton("OK", null)
+                .setNeutralButton("Copy") { _, _ ->
+                    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                    clipboard.setPrimaryClip(android.content.ClipData.newPlainText("crash", e.stackTraceToString()))
+                }
+                .show()
+        }
+
         val stubScript = prepareStubScript()
 
         val session = TerminalSession(
@@ -189,8 +210,15 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
     }
     override fun onTitleChanged(updatedSession: TerminalSession) {}
     override fun onSessionFinished(finishedSession: TerminalSession) {}
-    override fun onCopyTextToClipboard(session: TerminalSession, text: String) {}
-    override fun onPasteTextFromClipboard(session: TerminalSession?) {}
+    override fun onCopyTextToClipboard(session: TerminalSession, text: String) {
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("monclia", text))
+    }
+    override fun onPasteTextFromClipboard(session: TerminalSession?) {
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        val text = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: return
+        session?.write(text)
+    }
     override fun onBell(session: TerminalSession) {}
     override fun onColorsChanged(session: TerminalSession) {}
     override fun onTerminalCursorStateChange(state: Boolean) {}
