@@ -6,7 +6,7 @@ set -e
 
 WALLET_CLI="$BIN_DIR/monero-wallet-cli"
 WALLET_FILE="$WALLET_DIR/main-wallet"
-DAEMON="node.sethforprivacy.com:18089"
+DAEMON="opennode.xmr-tw.org:18089"
 LOG_FILE="$LOG_DIR/monero-wallet-cli.log"
 DOWNLOAD_URL="https://downloads.getmonero.org/cli/monero-android-armv7-v0.18.4.5.tar.bz2"
 EXPECTED_SHA256="3cd6611c5c33ae4c10e52698826560bbb17e00cf2f8a2d7f61e79d28f0f36ef6"

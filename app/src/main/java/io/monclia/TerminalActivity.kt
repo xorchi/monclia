@@ -85,9 +85,9 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         val walletDir = File(filesDir, "wallets").also { it.mkdirs() }
 
         val session = TerminalSession(
-            "/system/bin/sh",
+            orchestrator,
             filesDir.absolutePath,
-            arrayOf(orchestrator),
+            arrayOf(),
             arrayOf(
                 "TERM=xterm-256color",
                 "HOME=${filesDir.absolutePath}",
