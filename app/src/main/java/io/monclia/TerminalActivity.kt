@@ -73,10 +73,11 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         val execPath = prepareExecutable()
         val walletDir = File(filesDir, "wallets").also { it.mkdirs() }
 
+        val stubScript = File(filesDir, "bin/wallet-stub.sh").absolutePath
         val session = TerminalSession(
             execPath,
             walletDir.absolutePath,
-            arrayOf("--daemon-address", "node.sethforprivacy.com:18089"),
+            arrayOf(stubScript),
             arrayOf("TERM=xterm-256color", "HOME=${filesDir.absolutePath}"),
             2000,
             this
@@ -87,8 +88,14 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
 
     private fun prepareExecutable(): String {
         val binDir = File(filesDir, "bin").also { it.mkdirs() }
-        val stub = File(binDir, "wallet-stub")
-        return stub.absolutePath
+        val stub = File(binDir, "wallet-stub.sh")
+        if (!stub.exists()) {
+            assets.open("wallet-stub.sh").use { input ->
+                stub.outputStream().use { output -> input.copyTo(output) }
+            }
+            stub.setExecutable(true)
+        }
+        return "/system/bin/sh"
     }
 
     override fun onDestroy() {
