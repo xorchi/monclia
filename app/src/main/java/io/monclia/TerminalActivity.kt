@@ -137,7 +137,7 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         terminalView.setTextSize(24)
         terminalView.post {
             terminalView.attachSession(session)
-            val handler = WalletCliHandler(this, session)
+            val handler = WalletCliHandler(this, session) { terminalView.onScreenUpdated() }
             walletCliHandler = handler
             handler.start()
         }

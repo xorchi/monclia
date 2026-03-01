@@ -10,7 +10,8 @@ import java.util.zip.ZipOutputStream
 
 class WalletCliHandler(
     private val context: Context,
-    private val session: TerminalSession
+    private val session: TerminalSession,
+    private val onScreenUpdate: () -> Unit
 ) {
     private val filesDir = context.filesDir
     private val walletDir = File(filesDir, "wallets").also { it.mkdirs() }
@@ -42,8 +43,12 @@ class WalletCliHandler(
 
     // ── Output helpers ─────────────────────────────────────────────────────
 
-    private fun write(text: String) = session.write(text)
-    private fun writeln(text: String = "") = session.write("$text\r\n")
+    private fun write(text: String) {
+        val bytes = text.toByteArray(Charsets.UTF_8)
+        session.emulator?.append(bytes, bytes.size)
+        android.os.Handler(android.os.Looper.getMainLooper()).post { onScreenUpdate() }
+    }
+    private fun writeln(text: String = "") = write("$text\r\n")
     private fun clear() = write("\u001b[2J\u001b[H")
 
     private fun header() {
