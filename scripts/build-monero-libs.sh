@@ -28,9 +28,8 @@ cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DOPENSSL_SSL_LIBRARY:FILEPATH="${OPENSSL_DIR}/lib/libssl.a" \
   -DOPENSSL_CRYPTO_LIBRARY:FILEPATH="${OPENSSL_DIR}/lib/libcrypto.a" \
   -DBOOST_ROOT="${BOOST_DIR}" \
-  -DCMAKE_PREFIX_PATH="${BOOST_DIR}" \
+  -DCMAKE_PREFIX_PATH="${BOOST_DIR};${BOOST_DIR}/lib/cmake" \
   -DBoost_DIR="${BOOST_DIR}/lib/cmake/Boost-1.87.0" \
-  -Dboost_headers_DIR="${BOOST_DIR}/lib/cmake/boost_headers-1.87.0" \
   -DCMAKE_POLICY_DEFAULT_CMP0167=NEW \
   -DBoost_INCLUDE_DIR="${BOOST_DIR}/include" \
   -DBOOST_INCLUDEDIR="${BOOST_DIR}/include" \
