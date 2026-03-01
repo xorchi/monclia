@@ -26,6 +26,7 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
     private lateinit var terminalView: TerminalView
     private var terminalSession: TerminalSession? = null
     private var walletService: WalletService? = null
+    private var walletCliHandler: WalletCliHandler? = null
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
@@ -67,7 +68,11 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         override fun readAltKey(): Boolean = false
         override fun readShiftKey(): Boolean = false
         override fun readFnKey(): Boolean = false
-        override fun onCodePoint(codePoint: Int, ctrlDown: Boolean, session: TerminalSession): Boolean = false
+        override fun onCodePoint(codePoint: Int, ctrlDown: Boolean, session: TerminalSession): Boolean {
+            val char = String(Character.toChars(codePoint))
+            walletCliHandler?.onInput(char)
+            return false
+        }
         override fun onEmulatorSet() {}
         override fun logError(tag: String, message: String) {}
         override fun logWarn(tag: String, message: String) {}
@@ -120,51 +125,22 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
     }
 
     private fun startWalletCli() {
-        val walletDir = File(filesDir, "wallets").also { it.mkdirs() }
-
-        // Test: verifikasi libmonclia.so bisa di-load
-        try {
-            val testPath = File(walletDir, "test-wallet").absolutePath
-            val exists = WalletJni.walletExists(testPath)
-            Logger.log("JNI", "WalletJni loaded OK, walletExists=$exists")
-        } catch (e: Throwable) {
-            Logger.error("JNI", "WalletJni load FAILED", e)
-            AlertDialog.Builder(this)
-                .setTitle("JNI Load Error")
-                .setMessage(e.stackTraceToString().take(2000))
-                .setPositiveButton("OK", null)
-                .setNeutralButton("Copy") { _, _ ->
-                    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                    clipboard.setPrimaryClip(android.content.ClipData.newPlainText("crash", e.stackTraceToString()))
-                }
-                .show()
-        }
-
-        val stubScript = prepareStubScript()
-
         val session = TerminalSession(
             "/system/bin/sh",
-            walletDir.absolutePath,
-            arrayOf(stubScript),
+            filesDir.absolutePath,
+            arrayOf<String>(),
             arrayOf("TERM=xterm-256color", "HOME=${filesDir.absolutePath}"),
             2000,
             this
         )
         terminalSession = session
         terminalView.setTextSize(24)
-        terminalView.post { terminalView.attachSession(session) }
-    }
-
-    private fun prepareStubScript(): String {
-        val binDir = File(filesDir, "bin").also { it.mkdirs() }
-        val stub = File(binDir, "wallet-stub.sh")
-        if (!stub.exists()) {
-            assets.open("wallet-stub.sh").use { input ->
-                stub.outputStream().use { output -> input.copyTo(output) }
-            }
-            stub.setExecutable(true)
+        terminalView.post {
+            terminalView.attachSession(session)
+            val handler = WalletCliHandler(this, session)
+            walletCliHandler = handler
+            handler.start()
         }
-        return stub.absolutePath
     }
 
     private fun writeLogToDownloads(filename: String, content: String) {
