@@ -15,7 +15,7 @@ import com.termux.view.TerminalView
 import com.termux.view.TerminalViewClient
 import java.io.File
 
-class TerminalActivity : AppCompatActivity(), TerminalSessionClient, TerminalViewClient {
+class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
 
     private lateinit var terminalView: TerminalView
     private var terminalSession: TerminalSession? = null
@@ -31,11 +31,36 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient, TerminalVie
         }
     }
 
+    private val viewClient = object : TerminalViewClient {
+        override fun onSingleTapUp(e: MotionEvent) {}
+        override fun shouldBackButtonBeMappedToEscape(): Boolean = false
+        override fun shouldEnforceCharBasedInput(): Boolean = true
+        override fun shouldUseCtrlSpaceWorkaround(): Boolean = false
+        override fun isTerminalViewSelected(): Boolean = true
+        override fun copyModeChanged(copyMode: Boolean) {}
+        override fun onKeyDown(keyCode: Int, e: KeyEvent, session: TerminalSession): Boolean = false
+        override fun onKeyUp(keyCode: Int, e: KeyEvent): Boolean = false
+        override fun onLongPress(event: MotionEvent): Boolean = false
+        override fun readControlKey(): Boolean = false
+        override fun readAltKey(): Boolean = false
+        override fun readShiftKey(): Boolean = false
+        override fun readFnKey(): Boolean = false
+        override fun onCodePoint(codePoint: Int, ctrlDown: Boolean, session: TerminalSession): Boolean = false
+        override fun onEmulatorSet() {}
+        override fun logError(tag: String, message: String) {}
+        override fun logWarn(tag: String, message: String) {}
+        override fun logInfo(tag: String, message: String) {}
+        override fun logDebug(tag: String, message: String) {}
+        override fun logVerbose(tag: String, message: String) {}
+        override fun logStackTraceWithMessage(tag: String, message: String, e: Exception) {}
+        override fun logStackTrace(tag: String, e: Exception) {}
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         terminalView = TerminalView(this, null)
-        terminalView.setTerminalViewClient(this)
+        terminalView.setTerminalViewClient(viewClient)
         setContentView(terminalView)
 
         val intent = Intent(this, WalletService::class.java)
@@ -91,27 +116,4 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient, TerminalVie
     override fun logVerbose(tag: String, message: String) {}
     override fun logStackTraceWithMessage(tag: String, message: String, e: Exception) {}
     override fun logStackTrace(tag: String, e: Exception) {}
-
-    // ── TerminalViewClient ─────────────────────────────────────────────────
-
-    override fun onSingleTapUp(e: MotionEvent) {}
-    override fun shouldBackButtonBeMappedToEscape(): Boolean = false
-    override fun shouldEnforceCharBasedInput(): Boolean = true
-    override fun shouldUseCtrlSpaceWorkaround(): Boolean = false
-    override fun isTerminalViewSelected(): Boolean = true
-    override fun copyModeChanged(copyMode: Boolean) {}
-    override fun onKeyDown(keyCode: Int, e: KeyEvent, session: TerminalSession): Boolean = false
-    override fun onKeyUp(keyCode: Int, e: KeyEvent): Boolean = false
-    override fun onLongPress(event: MotionEvent): Boolean = false
-    override fun readControlKey(): Boolean = false
-    override fun readAltKey(): Boolean = false
-    override fun readShiftKey(): Boolean = false
-    override fun readFnKey(): Boolean = false
-    override fun onCodePoint(codePoint: Int, ctrlDown: Boolean, session: TerminalSession): Boolean = false
-    override fun onEmulatorSet() {}
-    override fun logError(tag: String, message: String) {}
-    override fun logWarn(tag: String, message: String) {}
-    override fun logInfo(tag: String, message: String) {}
-    override fun logDebug(tag: String, message: String) {}
-    override fun logVerbose(tag: String, message: String) {}
 }
