@@ -24,7 +24,16 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
             walletService = (binder as WalletService.LocalBinder).getService()
-            startWalletCli()
+            try {
+                startWalletCli()
+            } catch (e: Exception) {
+                File(filesDir, "crash.log").writeText(e.stackTraceToString())
+                android.app.AlertDialog.Builder(this@TerminalActivity)
+                    .setTitle("Startup Error")
+                    .setMessage(e.stackTraceToString().take(2000))
+                    .setPositiveButton("OK", null)
+                    .show()
+            }
         }
         override fun onServiceDisconnected(name: ComponentName) {
             walletService = null
@@ -61,9 +70,16 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         super.onCreate(savedInstanceState)
 
         Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
+            android.util.Log.e("Monclia", throwable.stackTraceToString())
             runCatching {
-                File(getExternalFilesDir(null), "crash.log")
-                    .writeText(throwable.stackTraceToString())
+                File(filesDir, "crash.log").writeText(throwable.stackTraceToString())
+            }
+            runOnUiThread {
+                android.app.AlertDialog.Builder(this)
+                    .setTitle("Crash")
+                    .setMessage(throwable.stackTraceToString().take(2000))
+                    .setPositiveButton("OK", null)
+                    .show()
             }
         }
 
