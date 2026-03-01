@@ -30,6 +30,7 @@ cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DBOOST_ROOT="${BOOST_DIR}" \
   -DCMAKE_PREFIX_PATH="${BOOST_DIR}" \
   -DBoost_DIR="${BOOST_DIR}/lib/cmake/Boost-1.87.0" \
+  -Dboost_headers_DIR="${BOOST_DIR}/lib/cmake/boost_headers-1.87.0" \
   -DCMAKE_POLICY_DEFAULT_CMP0167=NEW \
   -DBoost_INCLUDE_DIR="${BOOST_DIR}/include" \
   -DBOOST_INCLUDEDIR="${BOOST_DIR}/include" \
