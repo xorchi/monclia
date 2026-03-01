@@ -104,6 +104,13 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         terminalView = TerminalView(this, null)
         terminalView.setTerminalViewClient(viewClient)
         setContentView(terminalView)
+        terminalView.isFocusable = true
+        terminalView.isFocusableInTouchMode = true
+        terminalView.requestFocus()
+        terminalView.post {
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+            imm.showSoftInput(terminalView, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+        }
 
         val intent = Intent(this, WalletService::class.java)
         startForegroundService(intent)
