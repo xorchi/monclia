@@ -24,7 +24,7 @@ curl -L --fail --retry 3 --retry-delay 5 "${BOOST_URL}" | tar xz -C /tmp
 echo "[boost] Bootstrapping..."
 cd "${SRC_DIR}"
 ./bootstrap.sh --prefix="${BUILD_DIR}" \
-  --with-libraries=atomic,chrono,date_time,filesystem,locale,program_options,regex,serialization,system,thread
+  --with-libraries=atomic,chrono,date_time,filesystem,headers,locale,program_options,regex,serialization,system,thread
 
 echo "[boost] Writing user-config.jam..."
 cat > user-config.jam << JAMEOF
@@ -51,6 +51,7 @@ echo "[boost] Building..."
   --user-config=user-config.jam \
   --prefix="${BUILD_DIR}" \
   --layout=system \
+  --with-headers \
   --with-atomic \
   --with-chrono \
   --with-date_time \
