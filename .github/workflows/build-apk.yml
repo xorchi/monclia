@@ -41,6 +41,12 @@ jobs:
           run-id: ${{ vars.NATIVE_LIBS_RUN_ID }}
           path: build/
 
+      - name: Inject termux-app gradle properties
+        run: |
+          PROPS="compileSdkVersion=36\nminSdkVersion=26\ntargetSdkVersion=36\nndkVersion=27.2.12479018"
+          printf "$PROPS" > external/termux-app/terminal-emulator/gradle.properties
+          printf "$PROPS" > external/termux-app/terminal-view/gradle.properties
+
       - name: Decode keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
