@@ -12,6 +12,11 @@ API_LEVEL="${API_LEVEL:-24}"
 mkdir -p "${BUILD_DIR}"
 rm -rf "${BUILD_DIR}/CMakeCache.txt" "${BUILD_DIR}/CMakeFiles"
 
+# Remove Boost cmake config files to force old-style FindBoost
+# BoostConfig.cmake causes CMake to use new-style component lookup
+# which fails because b2 does not generate per-component config files
+rm -rf "${BOOST_DIR}/lib/cmake"
+
 echo "[monero] Configuring..."
 cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DCMAKE_TOOLCHAIN_FILE="${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake" \
@@ -28,20 +33,18 @@ cmake -S "${MONERO_SRC}" -B "${BUILD_DIR}" \
   -DOPENSSL_SSL_LIBRARY:FILEPATH="${OPENSSL_DIR}/lib/libssl.a" \
   -DOPENSSL_CRYPTO_LIBRARY:FILEPATH="${OPENSSL_DIR}/lib/libcrypto.a" \
   -DBOOST_ROOT="${BOOST_DIR}" \
-  -DCMAKE_PREFIX_PATH="${BOOST_DIR};${BOOST_DIR}/lib/cmake" \
-  -DBoost_DIR="${BOOST_DIR}/lib/cmake/Boost-1.87.0" \
-  -DCMAKE_POLICY_DEFAULT_CMP0167=NEW \
   -DBoost_INCLUDE_DIR="${BOOST_DIR}/include" \
   -DBOOST_INCLUDEDIR="${BOOST_DIR}/include" \
   -DBOOST_LIBRARYDIR="${BOOST_DIR}/lib" \
-  -DBoost_USE_STATIC_LIBS=ON \
+  -DBoost_NO_SYSTEM_PATHS=ON \
+  -DBoost_NO_BOOST_CMAKE=ON \
   -DSodium_INCLUDE_DIR="${SODIUM_DIR}/include" \
   -DSodium_LIBRARY:FILEPATH="${SODIUM_DIR}/lib/libsodium.a" \
   -DUNBOUND_ROOT="${UNBOUND_DIR}" \
   -DUNBOUND_INCLUDE_DIR="${UNBOUND_DIR}/include" \
   -DUNBOUND_LIBRARIES:FILEPATH="${UNBOUND_DIR}/lib/libunbound.a"
 
-echo "[monero] Building wallet libraries..."
+echo "[monero] Building wallet_api..."
 cmake --build "${BUILD_DIR}" \
   --target wallet_api \
   -j"${JOBS:-4}"
