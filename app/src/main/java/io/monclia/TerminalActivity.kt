@@ -46,6 +46,7 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         override fun readShiftKey(): Boolean = false
         override fun readFnKey(): Boolean = false
         override fun onCodePoint(codePoint: Int, ctrlDown: Boolean, session: TerminalSession): Boolean = false
+        override fun onScale(scale: Float): Float = scale
         override fun onEmulatorSet() {}
         override fun logError(tag: String, message: String) {}
         override fun logWarn(tag: String, message: String) {}
@@ -109,6 +110,7 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
     override fun onColorsChanged(session: TerminalSession) {}
     override fun onTerminalCursorStateChange(state: Boolean) {}
     override fun setTerminalShellPid(session: TerminalSession, pid: Int) {}
+    override fun getTerminalCursorStyle(): Int? = null
     override fun logError(tag: String, message: String) {}
     override fun logWarn(tag: String, message: String) {}
     override fun logInfo(tag: String, message: String) {}
