@@ -14,6 +14,8 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
 
 class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
 
@@ -53,10 +55,14 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         Logger.log("App", "Monclia started")
 
         Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
-            Logger.error("Crash", "Uncaught exception", throwable)
-            runCatching { File(filesDir, "crash.log").writeText(throwable.stackTraceToString()) }
+            val msg = throwable.stackTraceToString()
+            // Write to Downloads so user can read without root
+            try {
+                val dl = android.os.Environment.getExternalStoragePublicDirectory(
+                    android.os.Environment.DIRECTORY_DOWNLOADS)
+                java.io.File(dl, "monclia-crash.txt").writeText(msg)
+            } catch (_: Throwable) {}
             runOnUiThread {
-                val msg = throwable.stackTraceToString()
                 AlertDialog.Builder(this)
                     .setTitle("Crash")
                     .setMessage(msg.take(2000))
@@ -124,17 +130,16 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         val expectedSha256 = "3cd6611c5c33ae4c10e52698826560bbb17e00cf2f8a2d7f61e79d28f0f36ef6"
         val archive = File(binDir, "monero-android-armv7.tar.bz2")
 
-        // Show download progress session
         val progressSession = TerminalSession(
             "/system/bin/sh",
             filesDir.absolutePath,
-            arrayOf("-c", "echo Downloading monero-wallet-cli..."),
+            arrayOf("-c", "echo 'Downloading monero-wallet-cli...'; echo 'This may take a moment.'"),
             arrayOf("TERM=xterm-256color"),
             200,
             this
         )
         terminalSession = progressSession
-        terminalView.post { terminalView.attachSession(progressSession) }
+        runOnUiThread { terminalView.attachSession(progressSession) }
 
         Thread {
             try {
@@ -171,13 +176,7 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
                 }
 
                 Logger.log("App", "Extracting archive")
-                val proc = ProcessBuilder(
-                    "tar", "-xjf", archive.absolutePath,
-                    "--wildcards", "*/monero-wallet-cli",
-                    "--strip-components=1",
-                    "-C", binDir.absolutePath
-                ).redirectErrorStream(true).start()
-                proc.waitFor()
+                extractBz2Tar(archive, binDir, "monero-wallet-cli")
                 archive.delete()
 
                 if (dest.exists()) {
@@ -194,6 +193,27 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         }.start()
     }
 
+    private fun extractBz2Tar(archive: File, destDir: File, targetFilename: String) {
+        archive.inputStream().buffered().use { fis ->
+            BZip2CompressorInputStream(fis).use { bz2 ->
+                TarArchiveInputStream(bz2).use { tar ->
+                    var entry = tar.nextEntry
+                    while (entry != null) {
+                        val name = File(entry.name).name
+                        if (name == targetFilename) {
+                            val dest = File(destDir, name)
+                            dest.outputStream().use { tar.copyTo(it) }
+                            Logger.log("App", "Extracted: ${dest.absolutePath}")
+                            return
+                        }
+                        entry = tar.nextEntry
+                    }
+                }
+            }
+        }
+        throw Exception("$targetFilename not found in archive")
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         terminalSession?.finishIfRunning()
@@ -206,8 +226,10 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
     }
     override fun onTitleChanged(updatedSession: TerminalSession) {}
     override fun onSessionFinished(finishedSession: TerminalSession) {
-        Logger.log("App", "Session finished — closing app")
-        finish()
+        if (finishedSession == terminalSession) {
+            Logger.log("App", "Session finished — closing app")
+            finish()
+        }
     }
     override fun onCopyTextToClipboard(session: TerminalSession, text: String) {
         val cb = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
