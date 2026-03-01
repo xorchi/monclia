@@ -32,6 +32,7 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
     }
 
     private val viewClient = object : TerminalViewClient {
+        override fun onScale(scale: Float): Float = scale
         override fun onSingleTapUp(e: MotionEvent) {}
         override fun shouldBackButtonBeMappedToEscape(): Boolean = false
         override fun shouldEnforceCharBasedInput(): Boolean = true
@@ -46,7 +47,6 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         override fun readShiftKey(): Boolean = false
         override fun readFnKey(): Boolean = false
         override fun onCodePoint(codePoint: Int, ctrlDown: Boolean, session: TerminalSession): Boolean = false
-        override fun onScale(scale: Float): Float = scale
         override fun onEmulatorSet() {}
         override fun logError(tag: String, message: String) {}
         override fun logWarn(tag: String, message: String) {}
@@ -60,6 +60,13 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        Thread.setDefaultUncaughtExceptionHandler { _, throwable ->
+            runCatching {
+                File(getExternalFilesDir(null), "crash.log")
+                    .writeText(throwable.stackTraceToString())
+            }
+        }
+
         terminalView = TerminalView(this, null)
         terminalView.setTerminalViewClient(viewClient)
         setContentView(terminalView)
@@ -70,12 +77,11 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
     }
 
     private fun startWalletCli() {
-        val execPath = prepareExecutable()
         val walletDir = File(filesDir, "wallets").also { it.mkdirs() }
+        val stubScript = prepareStubScript()
 
-        val stubScript = File(filesDir, "bin/wallet-stub.sh").absolutePath
         val session = TerminalSession(
-            execPath,
+            "/system/bin/sh",
             walletDir.absolutePath,
             arrayOf(stubScript),
             arrayOf("TERM=xterm-256color", "HOME=${filesDir.absolutePath}"),
@@ -86,7 +92,7 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
         terminalView.attachSession(session)
     }
 
-    private fun prepareExecutable(): String {
+    private fun prepareStubScript(): String {
         val binDir = File(filesDir, "bin").also { it.mkdirs() }
         val stub = File(binDir, "wallet-stub.sh")
         if (!stub.exists()) {
@@ -95,7 +101,7 @@ class TerminalActivity : AppCompatActivity(), TerminalSessionClient {
             }
             stub.setExecutable(true)
         }
-        return "/system/bin/sh"
+        return stub.absolutePath
     }
 
     override fun onDestroy() {
